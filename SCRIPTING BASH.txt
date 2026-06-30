@@ -43,12 +43,14 @@ apt autoclean
 echo
 echo "Creando Backup…"
 
-if [ -d "$HOME_USUARIO/Documentos" ]; then
-	
-	tar -czf \
-	"$BACKUP_DIR/documentos_$FECHA.tar.gz" \
-	"$HOME_USUARIO/Documentos"
-	echo "Backup creado correctamente."
+CARPETA_DOCS="$HOME_USUARIO/Documentos"
+if [ -d "$HOME_USUARIO" ]; then
+	tar -czf "$BACKUP_DIR/documentos_$FECHA.tar.gz" "$CARPETA_DOCS"
+	if [ $? -eq 0 ]; then
+		echo "Backup creado correctamente."
+	else
+		echo "Error al crear el backup."
+	fi
 else
 	echo "No existe la carpeta Documentos."
 fi
@@ -59,7 +61,7 @@ echo "Uso del disco:"
 df -h
 
 echo
-echo "Memoria RAM: 
+echo "Memoria RAM:"
 free -h
 
 echo
@@ -69,7 +71,7 @@ uptime
 #Tamano del backup
 echo
 echo "Backups existentes:"
-du -sh "$BACKUPS_DIR"
+du -sh "$BACKUP_DIR"
 
 #Tiempo de ejecución
 FIN=$(date +%s)
