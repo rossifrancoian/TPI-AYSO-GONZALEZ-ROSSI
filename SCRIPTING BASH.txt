@@ -1,0 +1,83 @@
+#!/bin/bash
+#SCRIPT DE MANTENIMIENTO COMPLETO
+#Comprobar permisos
+if [ "$EUID" -ne 0 ]; then
+    echo "Ejecute este script con sudo."
+    exit 1
+fi
+
+#Variables
+INICIO=$(date +%s)
+
+USUARIO_REAL=${SUDO_USER:-$USER}
+HOME_USUARIO=$(eval echo "~$USUARIO_REAL")
+
+FECHA=$(date +"%Y-%m-%d_%H-%M-%S")
+BACKUP_DIR="$HOME_USUARIO/backups"
+LOG="$BACKUP_DIR/mantenimiento_$FECHA.log"
+mkdir -p "$BACKUP_DIR"
+
+#Guardamos lo que aparece en pantalla dentro del log
+exec > >(tee -a "$LOG") 2>&1
+echo "MANTENIMIENTO DEL SISTEMA"
+echo "Fecha: $(date)"
+echo
+
+#Actualizacion
+apt update
+
+echo
+echo "Actualizando programas..."
+apt upgrade -y
+
+#Limpieza
+echo
+echo "Eliminando paquetes innecesarios"
+apt autoremove -y
+
+echo
+echo "Limpiando cache..."
+apt autoclean
+
+#Backup
+echo
+echo "Creando Backup…"
+
+if [ -d "$HOME_USUARIO/Documentos" ]; then
+	
+	tar -czf \
+	"$BACKUP_DIR/documentos_$FECHA.tar.gz" \
+	"$HOME_USUARIO/Documentos"
+	echo "Backup creado correctamente."
+else
+	echo "No existe la carpeta Documentos."
+fi
+
+#Informacion del Sistema
+echo
+echo "Uso del disco:"
+df -h
+
+echo
+echo "Memoria RAM: 
+free -h
+
+echo
+echo "Tiempo encendido:"
+uptime
+
+#Tamano del backup
+echo
+echo "Backups existentes:"
+du -sh "$BACKUPS_DIR"
+
+#Tiempo de ejecución
+FIN=$(date +%s)
+TIEMPO=$((FIN-INICIO))
+
+echo
+echo "Mantenimiento finalizado correctamente."
+echo "Tiempo empleado: $TIEMPO segundos."
+echo "Log generado en:"
+echo "$LOG"
+
