@@ -8,10 +8,8 @@ fi
 
 #Variables
 INICIO=$(date +%s)
-
 USUARIO_REAL=${SUDO_USER:-$USER}
 HOME_USUARIO=$(eval echo "~$USUARIO_REAL")
-
 FECHA=$(date +"%Y-%m-%d_%H-%M-%S")
 BACKUP_DIR="$HOME_USUARIO/backups"
 LOG="$BACKUP_DIR/mantenimiento_$FECHA.log"
@@ -22,6 +20,12 @@ exec > >(tee -a "$LOG") 2>&1
 echo "MANTENIMIENTO DEL SISTEMA"
 echo "Fecha: $(date)"
 echo
+
+#Limpieza previa
+echo "Limpieza previa..."
+apt clean
+rm -rf /var/cache/apt/archives/*
+apt autoclean -y
 
 #Actualizacion
 apt update
@@ -44,7 +48,7 @@ echo
 echo "Creando Backup…"
 
 CARPETA_DOCS="$HOME_USUARIO/Documentos"
-if [ -d "$HOME_USUARIO" ]; then
+if [ -d "$CARPETA_DOCS" ]; then
 	tar -czf "$BACKUP_DIR/documentos_$FECHA.tar.gz" "$CARPETA_DOCS"
 	if [ $? -eq 0 ]; then
 		echo "Backup creado correctamente."
@@ -52,7 +56,13 @@ if [ -d "$HOME_USUARIO" ]; then
 		echo "Error al crear el backup."
 	fi
 else
-	echo "No existe la carpeta Documentos."
+	echo "La carpeta Documentos no existe. Creando backup del home..."
+	tar -czf "$BACKUP_DIR/home_$FECHA.tar.gz" "$HOME_USUARIO" --exclude="$HOME_USUARIO/.cache" 2>/dev/null
+	if [ $? -eq 0 ]; then
+		echo "Backup del home creado."
+	else
+		echo "Error al crear el backup del home"
+	fi
 fi
 
 #Informacion del Sistema
